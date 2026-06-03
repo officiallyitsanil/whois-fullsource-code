@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "WHOIS Lookup"
+version = "1.0.0"
+id = "artifacts/whois-lookup"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22163
+
+[services.development]
+run = "pnpm --filter @workspace/whois-lookup run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/whois-lookup", "run", "build" ]
+publicDir = "artifacts/whois-lookup/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22163"
+BASE_PATH = "/"

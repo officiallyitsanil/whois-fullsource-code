@@ -1,0 +1,325 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: WHOIS Lookup API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: whois
+    description: WHOIS lookup operations
+  - name: dns
+    description: DNS lookup operations
+  - name: domain
+    description: Domain availability operations
+  - name: history
+    description: Search history operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /whois/{domain}:
+    get:
+      operationId: getWhois
+      tags: [whois]
+      summary: WHOIS lookup
+      description: Fetches WHOIS data for a domain
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: WHOIS data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WhoisResult"
+        "400":
+          description: Invalid domain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Lookup failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /dns/{domain}:
+    get:
+      operationId: getDns
+      tags: [dns]
+      summary: DNS lookup
+      description: Fetches DNS records for a domain
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: DNS records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DnsResult"
+        "400":
+          description: Invalid domain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /domain-check/{domain}:
+    get:
+      operationId: getDomainAvailability
+      tags: [domain]
+      summary: Domain availability check
+      description: Check availability across popular TLDs
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Availability results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DomainAvailabilityResult"
+        "400":
+          description: Invalid domain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /history:
+    get:
+      operationId: getSearchHistory
+      tags: [history]
+      summary: Get recent search history
+      description: Returns the latest domain searches
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of recent searches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SearchHistory"
+
+  /history/popular:
+    get:
+      operationId: getPopularSearches
+      tags: [history]
+      summary: Get popular domains searched
+      description: Returns top searched domains grouped by count
+      responses:
+        "200":
+          description: Popular domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PopularDomain"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    WhoisResult:
+      type: object
+      properties:
+        domainName:
+          type: ["string", "null"]
+        registrar:
+          type: ["string", "null"]
+        registrarUrl:
+          type: ["string", "null"]
+        createdDate:
+          type: ["string", "null"]
+        updatedDate:
+          type: ["string", "null"]
+        expiresDate:
+          type: ["string", "null"]
+        status:
+          type: array
+          items:
+            type: string
+        nameservers:
+          type: array
+          items:
+            type: string
+        registrantCountry:
+          type: ["string", "null"]
+        domainAge:
+          type: ["integer", "null"]
+        rawText:
+          type: ["string", "null"]
+      required:
+        - domainName
+        - registrar
+        - registrarUrl
+        - createdDate
+        - updatedDate
+        - expiresDate
+        - status
+        - nameservers
+        - registrantCountry
+        - domainAge
+        - rawText
+
+    DnsRecord:
+      type: object
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+        ttl:
+          type: ["integer", "null"]
+        priority:
+          type: ["integer", "null"]
+      required:
+        - type
+        - value
+
+    DnsResult:
+      type: object
+      properties:
+        domain:
+          type: string
+        A:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+        AAAA:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+        MX:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+        TXT:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+        NS:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+        CNAME:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+      required:
+        - domain
+        - A
+        - AAAA
+        - MX
+        - TXT
+        - NS
+        - CNAME
+
+    TldAvailability:
+      type: object
+      properties:
+        tld:
+          type: string
+        available:
+          type: boolean
+        domain:
+          type: string
+      required:
+        - tld
+        - available
+        - domain
+
+    DomainAvailabilityResult:
+      type: object
+      properties:
+        baseDomain:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/TldAvailability"
+      required:
+        - baseDomain
+        - results
+
+    SearchHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        domain:
+          type: string
+        searchedAt:
+          type: string
+        ipAddress:
+          type: ["string", "null"]
+      required:
+        - id
+        - domain
+        - searchedAt
+        - ipAddress
+
+    PopularDomain:
+      type: object
+      properties:
+        domain:
+          type: string
+        count:
+          type: integer
+      required:
+        - domain
+        - count

@@ -1,0 +1,2 @@
+- [whois-package-nodejs24](whois-package-nodejs24.md) — whois-json is broken on Node.js 24; use the whois package with `import * as whois` (named exports)
+- [drizzle-duplicate-resolution](drizzle-duplicate-resolution.md) — pnpm can resolve two drizzle-orm instances causing SQL type mismatches; use pool.query() as escape hatch
